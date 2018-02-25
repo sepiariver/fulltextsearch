@@ -1,0 +1,31 @@
+{
+    "name": "FullTextSearch",
+    "lowCaseName": "fulltextsearch",
+    "description": "MySQL FULLTEXT search for MODX CMS.",
+    "author": "YJ Tso <info@sepiariver.com>",
+    "version": "0.0.1-dev1",
+    "package": {
+        "elements": {
+            "plugins": [{
+                "name": "ftsIndex",
+                "events": [
+                    "OnBeforeSaveWebPageCache",
+                    "OnDocFormSave",
+                    "OnDocFormDelete",
+                    "OnDocPublished",
+                    "OnDocUnPublished"
+                ]
+            }],
+            "snippets": [{
+                "name": "ftsSearch"
+            }]
+        },
+        "systemSettings": [{
+            "key": "index_hidden",
+            "value": "0"
+        }]
+    },
+    "database": {
+        "tables": ["FTSContent"]
+    }
+}
