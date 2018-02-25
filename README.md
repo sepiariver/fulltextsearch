@@ -1,2 +1,2 @@
-# _modxExtraTpl
-Just the basic folder structure
+# FullTextSearch
+MySQL FULLTEXT search for MODX CMS.
