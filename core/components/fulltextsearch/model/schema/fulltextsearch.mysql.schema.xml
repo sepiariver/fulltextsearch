@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model
+    package="fulltextsearch"
+    baseClass="xPDOObject"
+    platform="mysql"
+    defaultEngine="InnoDB"
+    phpdoc-package="fulltextsearch"
+    version="1.1">
+    <object
+        class="FTSContent"
+        table="fts_content"
+        extends="xPDOSimpleObject">
+        <field key="content_id" dbtype="int" precision="10" phptype="integer" attributes="unsigned" null="false" default="0" index="index" />
+        <field key="content_output" dbtype="mediumtext" phptype="string" index="fulltext" />
+    </object>
+</model>
