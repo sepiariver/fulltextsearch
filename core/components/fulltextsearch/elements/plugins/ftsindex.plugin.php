@@ -28,6 +28,8 @@
 
 // OPTIONS
 $appends = $modx->getOption('appends', $scriptProperties, '');
+$appendRenderedTVIds = array_filter(array_map('trim', explode(',', $modx->getOption('appendRenderedTVIds', $scriptProperties, ''))));
+$appendAlways = $modx->getOption('appendAlways', $scriptProperties, '');
 
 // Paths
 $ftsPath = $modx->getOption('fulltextsearch.core_path', null, $modx->getOption('core_path') . 'components/fulltextsearch/');
@@ -54,7 +56,12 @@ switch ($modx->event->name) {
             $ftsContent = $modx->getObject('FTSContent', ['content_id' => $resId]);
             if (!$ftsContent) $ftsContent = $modx->newObject('FTSContent');
             $contentOutput = $modx->resource->_output;
-            $contentOutput .= $fts->appendContent($appends, $resId);
+            $contentOutput .= $fts->appendContent([
+                'resource' => $resId,
+                'appends' => $appends,
+                'appendRenderedTVIds' => $appendRenderedTVIds,
+                'appendContent' => $appendAlways,
+                ]);
             $ftsContent->fromArray([
                 'content_id' => $resId,
                 'content_output' => $contentOutput,

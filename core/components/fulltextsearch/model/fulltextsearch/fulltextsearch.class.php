@@ -25,9 +25,9 @@ class FullTextSearch
 {
     public $modx = null;
     public $namespace = 'fulltextsearch';
-    public $options = array();
+    public $options = [];
 
-    public function __construct(modX &$modx, array $options = array())
+    public function __construct(modX &$modx, array $options = [])
     {
         $this->modx =& $modx;
         $this->namespace = $this->getOption('namespace', $options, 'fulltextsearch');
@@ -38,7 +38,7 @@ class FullTextSearch
         $dbPrefix = $this->getOption('table_prefix', $options, $this->modx->getOption('table_prefix', null, 'modx_'));
 
         /* load config defaults */
-        $this->options = array_merge(array(
+        $this->options = array_merge([
             'namespace' => $this->namespace,
             'corePath' => $corePath,
             'modelPath' => $corePath . 'model/fulltextsearch/',
@@ -50,54 +50,89 @@ class FullTextSearch
             'jsUrl' => $assetsUrl . 'js/',
             'cssUrl' => $assetsUrl . 'css/',
             'connectorUrl' => $assetsUrl . 'connector.php',
-        ), $options);
+        ], $options);
 
         $this->modx->addPackage('fulltextsearch', $this->options['modelPath'], $dbPrefix);
         $this->modx->lexicon->load('fulltextsearch:default');
-
     }
 
     public function indexable($res)
     {
-        /* Skip binary content types */
-        //$modx->resource->ContentType->get('binary')
-        // check for published, not deleted, searchable, cacheable
-
-        // maybe?
-        /* if specified, limit caching by mime-type
-        if (!empty($mimeTypes)) {
-            $validMimeTypes = array_walk(explode(',', strtolower($mimeTypes)), 'trim');
-            if (!in_array(strtolower($modx->resource->ContentType->get('mime_type')), $validMimeTypes)) break;
-        } */
-        /* if specified, limit caching by ContentTypes
-        if (!empty($contentTypes)) {
-            $validContentTypes = array_walk(explode(',', $contentTypes), 'trim');
-            if (!in_array($modx->resource->ContentType->get('id'), $validContentTypes)) break;
-        }*/
-    }
-
-    public function appendContent($appends, $resId, $appendContent = '')
-    {
-        // Quietly cast
-        $resId = (int) $resId;
-        $appendContent = (string) $appendContent;
-        // Silently return if empty
-        if (empty($appends) || empty($resId)) return $appendContent;
-        // Convert from JSON
-        $appends = $this->modx->fromJSON($appends);
-        if (!is_array($appends)) {
-            $this->modx->log(modX::LOG_LEVEL_WARN, 'Invalid argument supplied to FullTextSearch::appendContent on line: ' . __LINE__);
-            return $appendContent;
+        $indexable = false;
+        /* Required */
+        if (!($res instanceof modResource)) {
+            return $indexable;
         }
-        // Fetch specified fields from specified objects
-        foreach ($appends as $append) {
-            $appendObjects = $this->modx->getIterator($append['class'], [$append['resource_key'] => $resId]);
-            foreach ($appendObjects as $appendObject) {
-                // This is the raw content. Default values for TVs are not fetched this way.
-                $appendContent .= $appendObject->get($append['field']);
+        /* Skip binary content types */
+        if ($res->ContentType->get('binary')) {
+            return $indexable;
+        }
+        /* Skip unpublished */
+        if (!$res->get('published')) {
+            return $indexable;
+        }
+        /* Skip deleted */
+        if ($res->get('deleted')) {
+            return $indexable;
+        }
+        /* Skip unsearchable */
+        if (!$res->get('searchable')) {
+            return $indexable;
+        }
+        /* Skip uncacheable (risk of caching secret content) */
+        if (!$res->get('cacheable')) {
+            return $indexable;
+        }
+        /* if specified, limit indexing by mime-type */
+        $mimeTypes = $this->explodeAndClean($this->getOption('mimeTypes'));
+        if (!empty($mimeTypes)) {
+            $validMimeTypes = array_map('strtolower', $mimeTypes);
+            if (!in_array(strtolower($res->ContentType->get('mime_type')), $validMimeTypes)) {
+                return $indexable;
+            };
+        }
+        /* if specified, limit indexing by ContentTypes */
+        $contentTypes = $this->explodeAndClean($this->getOption('contentTypes'));
+        if (!empty($contentTypes)) {
+            if (!in_array($res->ContentType->get('id'), $contentTypes)) {
+                return $indexable;
             }
         }
+        /* After running the gauntlet */
+        $indexable = true;
+        return $indexable;
+    }
 
+    public function appendContent($options)
+    {
+        // Silently fail on these
+        if (!is_array($options) || empty($options['resource'])) return '';
+        // Quietly cast
+        $resId = (int) $options['resource'];
+        $appendContent = (string) $options['appendContent'];
+        // Append rendered TV values
+        if (!empty($options['appendRenderedTVIds']) && is_array($options['appendRenderedTVIds'])) {
+            $tvs = $modx->getCollection('modTemplateVar', array('id:IN' => $options['appendRenderedTVIds']));
+            foreach ($tvs as $tv) {
+                $appendContent .= $tv->renderOutput($resId);
+            }
+        }
+        // Append arbitrary object field values
+        if (!empty($options['appends'])) {
+            // Convert from JSON
+            $appends = $this->modx->fromJSON($appends);
+            if (is_array($appends)) {
+                // Fetch specified fields from specified objects
+                foreach ($appends as $append) {
+                    $appendObjects = $this->modx->getIterator($append['class'], [$append['resource_key'] => $resId]);
+                    foreach ($appendObjects as $appendObject) {
+                        // This is the raw content. Default values for TVs are not fetched this way.
+                        $appendContent .= $appendObject->get($append['field']);
+                    }
+                }
+            }
+        }
+        // Return content to be appended 
         return $appendContent;
     }
 
@@ -137,6 +172,7 @@ class FullTextSearch
     }
     public function getChunk($tpl, $phs)
     {
+        if (!is_array($phs)) $phs = [];
         if (strpos($tpl, '@INLINE ') !== false) {
             $content = str_replace('@INLINE', '', $tpl);
             /** @var \modChunk $chunk */
