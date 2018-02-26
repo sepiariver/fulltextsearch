@@ -10,7 +10,25 @@
         class="FTSContent"
         table="fts_content"
         extends="xPDOSimpleObject">
-        <field key="content_id" dbtype="int" precision="10" phptype="integer" attributes="unsigned" null="false" default="0" index="index" />
-        <field key="content_output" dbtype="mediumtext" phptype="string" index="fulltext" />
+        <field
+            key="content_id"
+            dbtype="int"
+            precision="10"
+            phptype="integer"
+            attributes="unsigned"
+            null="false"
+            default="0"
+            index="index" />
+        <field
+            key="content_output"
+            dbtype="mediumtext"
+            phptype="string"
+            index="fulltext" />
+        <index alias="fts_content_output" name="fts_content_output" primary="false" unique="false" type="FULLTEXT">
+            <column
+                key="content_output"
+                length=""
+                collation="A" />
+        </index>
     </object>
 </model>
