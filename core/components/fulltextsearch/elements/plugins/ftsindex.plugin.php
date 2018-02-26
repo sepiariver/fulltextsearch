@@ -54,7 +54,7 @@ switch ($modx->event->name) {
             $ftsContent = $modx->getObject('FTSContent', ['content_id' => $resId]);
             if (!$ftsContent) $ftsContent = $modx->newObject('FTSContent');
             $contentOutput = $modx->resource->_output;
-            $contentOutput .= $fts->appendContent($appends);
+            $contentOutput .= $fts->appendContent($appends, $resId);
             $ftsContent->fromArray([
                 'content_id' => $resId,
                 'content_output' => $contentOutput,
