@@ -5,7 +5,7 @@
  * Manages content in the fts_content table, for indexing.
  *
  * OPTIONS:
- * includes - (json)    Example: [{"class":"modTemplateVarResource", "resource_key":"contentid", "field":"value"}]
+ * appends - (json)    Example: [{"class":"modTemplateVarResource", "resource_key":"contentid", "field":"value"}]
  *
  * @package FullTextSearch
  * @author YJ Tso <info@sepiariver.com>
@@ -27,7 +27,7 @@
  **/
 
 // OPTIONS
-$includes = $modx->getOption('includes', $scriptProperties, '');
+$appends = $modx->getOption('appends', $scriptProperties, '');
 
 // Paths
 $ftsPath = $modx->getOption('fulltextsearch.core_path', null, $modx->getOption('core_path') . 'components/fulltextsearch/');
@@ -53,9 +53,11 @@ switch ($modx->event->name) {
             $resId = $modx->resource->get('id');
             $ftsContent = $modx->getObject('FTSContent', ['content_id' => $resId]);
             if (!$ftsContent) $ftsContent = $modx->newObject('FTSContent');
+            $contentOutput = $modx->resource->_output;
+            $contentOutput .= $fts->appendContent($appends);
             $ftsContent->fromArray([
                 'content_id' => $resId,
-                'content_output' => $modx->resource->_output,
+                'content_output' => $contentOutput,
             ]);
             /* Attempt to save the complete Resource output to the index */
             if (!$ftsContent->save()) {
