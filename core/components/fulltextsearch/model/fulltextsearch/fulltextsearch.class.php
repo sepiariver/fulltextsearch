@@ -78,6 +78,8 @@ class FullTextSearch
 
     public function appendContent($appends, $resId, $appendContent = '')
     {
+        // Quietly cast
+        $resId = (int) $resId;
         $appendContent = (string) $appendContent;
         // Silently return if empty
         if (empty($appends) || empty($resId)) return $appendContent;
@@ -87,14 +89,13 @@ class FullTextSearch
             $this->modx->log(modX::LOG_LEVEL_WARN, 'Invalid argument supplied to FullTextSearch::appendContent on line: ' . __LINE__);
             return $appendContent;
         }
-
+        // Fetch specified fields from specified objects
         foreach ($appends as $append) {
-            $appendObject = $this->modx->getObject($append['class'], [$append['resource_key'] => (int) $resId]);
-            if (!$appendObject) {
-                $this->modx->log(modX::LOG_LEVEL_WARN, 'FullTextSearch::appendContent could not load ' . $append['class'] . ' object on line: ' . __LINE__);
-                continue;
+            $appendObjects = $this->modx->getIterator($append['class'], [$append['resource_key'] => $resId]);
+            foreach ($appendObjects as $appendObject) {
+                // This is the raw content. Default values for TVs are not fetched this way.
+                $appendContent .= $appendObject->get($append['field']);
             }
-            $appendContent .= $appendObject->get($append['field']);
         }
 
         return $appendContent;
