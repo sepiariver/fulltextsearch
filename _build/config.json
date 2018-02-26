@@ -12,7 +12,6 @@
                     "OnBeforeSaveWebPageCache",
                     "OnDocFormSave",
                     "OnDocFormDelete",
-                    "OnDocPublished",
                     "OnDocUnPublished"
                 ]
             }],
