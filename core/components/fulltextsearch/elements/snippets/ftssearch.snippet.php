@@ -44,21 +44,23 @@ switch ($searchStyle) {
 $search = $modx->quote($search);
 $table = $tablePrefix . 'fts_content';
 
-// Prepare IDs
-$parentIdString = '';
+// Prepare IDs and set conditions
+$wheres = [];
 if (count($parents) > 0) {
     foreach ($parents as $pk => $pv) {
         $parents[$pk] = $modx->quote($pv, PDO::PARAM_INT);
     }
-    $parentIdString = " AND fts.content_parent IN (" . implode(',', $parents) . ") ";
+    $wheres[] = "fts.content_parent IN (" . implode(',', $parents) . ")";
 }
-
-$excludeIdString = '';
 if (count($excludeIds) > 0) {
     foreach ($excludeIds as $ek => $ev) {
         $excludeIds[$ek] = $modx->quote($ev, PDO::PARAM_INT);
     }
-    $excludeIdString = " AND fts.id NOT IN (" . implode(',', $excludeIds) . ") ";
+    $wheres[] = "fts.content_id NOT IN (" . implode(',', $excludeIds) . ")";
+}
+$whereString = '';
+if (!empty($wheres)) {
+    $whereString = 'WHERE ' . implode(' AND ', $wheres);
 }
 
 // Prepare limit
@@ -70,34 +72,28 @@ if ($limit > 0) {
 // Full-text query
 $ftQuery = $modx->query("SELECT fts.content_id, fts.score
     FROM (SELECT
-        id,
-        searchable,
-        published,
-        deleted,
-        parent,
-        MATCH (`pagetitle`,`longtitle`,`description`,`introtext`,`content`) AGAINST ({$search} IN NATURAL LANGUAGE MODE) AS score
+        content_id,
+        MATCH (content_output) AGAINST ({$search} IN NATURAL LANGUAGE MODE) AS score
         FROM {$table}
-        WHERE MATCH (`pagetitle`,`longtitle`,`description`,`introtext`,`content`) AGAINST ({$search} IN NATURAL LANGUAGE MODE)
-    ) AS res
-    WHERE res.searchable = 1 AND res.published = 1 AND res.deleted = 0
-    {$parentIdString} {$excludeIdString} {$limitString}; ");
+        WHERE MATCH (content_output) AGAINST ({$search} IN NATURAL LANGUAGE MODE)
+    ) AS fts
+    {$whereString}
+    {$limitString};
+");
 $results = $ftQuery->fetchAll(PDO::FETCH_ASSOC);
 
 // Only run expanded query if zero results
 if (count($results) < 1 && $allowQueryExpansion) {
-    $ftQuery = $modx->query("SELECT res.id, res.score
+    $ftQuery = $modx->query("SELECT fts.content_id, fts.score
         FROM (SELECT
-            id,
-            searchable,
-            published,
-            deleted,
-            parent,
-            MATCH (`pagetitle`,`longtitle`,`description`,`introtext`,`content`) AGAINST ({$search} WITH QUERY EXPANSION) AS score
+            content_id,
+            MATCH (content_output) AGAINST ({$search} WITH QUERY EXPANSION) AS score
             FROM {$table}
-            WHERE MATCH (`pagetitle`,`longtitle`,`description`,`introtext`,`content`) AGAINST ({$search} WITH QUERY EXPANSION)
-        ) AS res
-        WHERE res.searchable = 1 AND res.published = 1 AND res.deleted = 0
-        {$parentIdString} {$excludeIdString} {$limitString}; ");
+            WHERE MATCH (content_output) AGAINST ({$search} WITH QUERY EXPANSION)
+        ) AS fts
+        {$whereString}
+        {$limitString};
+    ");
     $results = $ftQuery->fetchAll(PDO::FETCH_ASSOC);
 }
 if (count($results) < 1) return '';
