@@ -36,7 +36,7 @@ $ftsPath = $modx->getOption('fulltextsearch.core_path', null, $modx->getOption('
 $ftsPath .= 'model/fulltextsearch/';
 
 // Get Class
-if (file_exists($ftsPath . 'oauth2server.class.php')) $fts = $modx->getService('fulltextsearch', 'FullTextSearch', $ftsPath, $scriptProperties);
+if (file_exists($ftsPath . 'fulltextsearch.class.php')) $fts = $modx->getService('fulltextsearch', 'FullTextSearch', $ftsPath, $scriptProperties);
 if (!($fts instanceof FullTextSearch)) {
     $modx->log(modX::LOG_LEVEL_ERROR, __FUNCTION__ . ' could not load the required class on line: ' . __LINE__);
     return;
@@ -87,14 +87,14 @@ switch ($modx->event->name) {
         }
         break;
     case 'OnDocFormSave':
-        if (!$modx->resource) {
+        if (!$resource) {
             $modx->log(modX::LOG_LEVEL_ERROR, __FUNCTION__ . ' could not load the required Resource on line: ' . __LINE__);
             break;
         }
         /* Delete Resource from index if indexable status has changed */
-        if (!$fts->indexable($modx->resource)) {
+        if (!$fts->indexable($resource)) {
             /* Delete Resource from index */
-            $resId = $modx->resource->get('id');
+            $resId = $resource->get('id');
             $ftsContent = $modx->getObject('FTSContent', ['content_id' => $resId]);
             if (!$ftsContent->remove()) {
                 $modx->log(modX::LOG_LEVEL_ERROR, __FUNCTION__ . ' could not remove Resource: ' . $resId . ' from the index on line: ' . __LINE__);

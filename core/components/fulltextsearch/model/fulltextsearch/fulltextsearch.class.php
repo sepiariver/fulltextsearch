@@ -41,7 +41,7 @@ class FullTextSearch
         $this->options = array_merge([
             'namespace' => $this->namespace,
             'corePath' => $corePath,
-            'modelPath' => $corePath . 'model/fulltextsearch/',
+            'modelPath' => $corePath . 'model/',
             'chunksPath' => $corePath . 'elements/chunks/',
             'snippetsPath' => $corePath . 'elements/snippets/',
             'templatesPath' => $corePath . 'templates/',
@@ -110,30 +110,35 @@ class FullTextSearch
         // Quietly cast
         $resId = (int) $options['resource'];
         $appendContent = (string) $options['appendContent'];
+
         // Append rendered TV values
         if (!empty($options['appendRenderedTVIds']) && is_array($options['appendRenderedTVIds'])) {
-            $tvs = $modx->getCollection('modTemplateVar', array('id:IN' => $options['appendRenderedTVIds']));
+            $c = $this->modx->newQuery('modTemplateVar');
+            $c->where([
+                'id:IN' => $options['appendRenderedTVIds'],
+            ]);
+            $tvs = $this->modx->getCollection('modTemplateVar', $c);
             foreach ($tvs as $tv) {
-                $appendContent .= $tv->renderOutput($resId);
+                $appendContent .= ' ' . $tv->renderOutput($resId);
             }
         }
         // Append arbitrary object field values
         if (!empty($options['appends'])) {
             // Convert from JSON
-            $appends = $this->modx->fromJSON($appends);
-            if (is_array($appends)) {
+            $appends = (array) $this->modx->fromJSON($options['appends']);
+            if (is_array($appends) && !empty($appends)) {
                 // Fetch specified fields from specified objects
                 foreach ($appends as $append) {
                     $appendObjects = $this->modx->getIterator($append['class'], [$append['resource_key'] => $resId]);
                     foreach ($appendObjects as $appendObject) {
                         // This is the raw content. Default values for TVs are not fetched this way.
-                        $appendContent .= $appendObject->get($append['field']);
+                        $appendContent .= ' ' . $appendObject->get($append['field']);
                     }
                 }
             }
         }
-        // Return content to be appended 
-        return $appendContent;
+        // Return content to be appended
+        return ' ' . $appendContent;
     }
 
     /* UTILITY METHODS (@theboxer) */
