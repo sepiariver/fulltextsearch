@@ -56,6 +56,18 @@ class FullTextSearch
         $this->modx->lexicon->load('fulltextsearch:default');
     }
 
+    public function checkDBVersion()
+    {
+        $vq = $this->modx->query("SHOW VARIABLES LIKE 'version'");
+        $vers = $vq->fetch(PDO::FETCH_ASSOC);
+        if (version_compare($vers['Value'], '5.6.4', '<')) {
+            $this->modx->log(modX::LOG_LEVEL_ERROR, 'Full-text search requires MySQL 5.6.4 or higher for maximum compatibility.');
+            return false;
+        }
+
+        return true;
+    }
+
     public function indexable($res)
     {
         $indexable = false;

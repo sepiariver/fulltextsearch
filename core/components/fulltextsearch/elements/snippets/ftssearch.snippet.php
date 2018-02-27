@@ -1,11 +1,4 @@
 <?php
-// Check MySQL version
-$vq = $modx->query("SHOW VARIABLES LIKE 'version'");
-$vers = $vq->fetch(PDO::FETCH_ASSOC);
-if (!(floatVal($vers['Value']) >= 5.6)) {
-    $modx->log(modX::LOG_LEVEL_ERROR, 'Full-text search requires MySQL 5.6 or higher for maximum compatibility.');
-    return;
-}
 
 // Options
 $limit = (int) $modx->getOption('limit', $scriptProperties, 0);
@@ -49,7 +42,7 @@ switch ($searchStyle) {
 
 // Important!
 $search = $modx->quote($search);
-$table = $tablePrefix . 'site_content';
+$table = $tablePrefix . 'fts_content';
 
 // Prepare IDs
 $parentIdString = '';
@@ -57,7 +50,7 @@ if (count($parents) > 0) {
     foreach ($parents as $pk => $pv) {
         $parents[$pk] = $modx->quote($pv, PDO::PARAM_INT);
     }
-    $parentIdString = " AND res.parent IN (" . implode(',', $parents) . ") ";
+    $parentIdString = " AND fts.content_parent IN (" . implode(',', $parents) . ") ";
 }
 
 $excludeIdString = '';
@@ -65,7 +58,7 @@ if (count($excludeIds) > 0) {
     foreach ($excludeIds as $ek => $ev) {
         $excludeIds[$ek] = $modx->quote($ev, PDO::PARAM_INT);
     }
-    $excludeIdString = " AND res.id NOT IN (" . implode(',', $excludeIds) . ") ";
+    $excludeIdString = " AND fts.id NOT IN (" . implode(',', $excludeIds) . ") ";
 }
 
 // Prepare limit
@@ -75,7 +68,7 @@ if ($limit > 0) {
 }
 
 // Full-text query
-$ftQuery = $modx->query("SELECT res.id, res.score
+$ftQuery = $modx->query("SELECT fts.content_id, fts.score
     FROM (SELECT
         id,
         searchable,
