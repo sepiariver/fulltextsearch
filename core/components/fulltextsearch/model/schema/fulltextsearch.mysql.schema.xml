@@ -20,6 +20,15 @@
             default="0"
             index="index" />
         <field
+            key="content_parent"
+            dbtype="int"
+            precision="10"
+            phptype="integer"
+            attributes="unsigned"
+            null="false"
+            default="0"
+            index="index" />
+        <field
             key="content_output"
             dbtype="mediumtext"
             phptype="string"

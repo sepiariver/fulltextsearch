@@ -10,11 +10,22 @@ $xpdo_meta_map['FTSContent']= array (
   'fields' => 
   array (
     'content_id' => 0,
+    'content_parent' => 0,
     'content_output' => NULL,
   ),
   'fieldMeta' => 
   array (
     'content_id' => 
+    array (
+      'dbtype' => 'int',
+      'precision' => '10',
+      'phptype' => 'integer',
+      'attributes' => 'unsigned',
+      'null' => false,
+      'default' => 0,
+      'index' => 'index',
+    ),
+    'content_parent' => 
     array (
       'dbtype' => 'int',
       'precision' => '10',

@@ -27,9 +27,11 @@
  **/
 
 // OPTIONS
-$appends = $modx->getOption('appends', $scriptProperties, '');
+$appendResourceFields = array_filter(array_map('trim', explode(',', $modx->getOption('appendResourceFields', $scriptProperties, ''))));
+$appendClassObjects = $modx->getOption('appendClassObjects', $scriptProperties, '');
 $appendRenderedTVIds = array_filter(array_map('trim', explode(',', $modx->getOption('appendRenderedTVIds', $scriptProperties, ''))));
 $appendAlways = $modx->getOption('appendAlways', $scriptProperties, '');
+$indexFullRenderedOutput = $modx->getOption('indexFullRenderedOutput', $scriptProperties, true);
 
 // Paths
 $ftsPath = $modx->getOption('fulltextsearch.core_path', null, $modx->getOption('core_path') . 'components/fulltextsearch/');
@@ -46,6 +48,8 @@ switch ($modx->event->name) {
 
     // Index on cache generation
     case 'OnBeforeSaveWebPageCache':
+        // Bypass indexing of full rendered output
+        if (!$indexFullRenderedOutput) break;
         if (!$modx->resource) {
             $modx->log(modX::LOG_LEVEL_ERROR, __FUNCTION__ . ' could not load the required Resource on line: ' . __LINE__);
             break;
@@ -58,12 +62,13 @@ switch ($modx->event->name) {
             $contentOutput = $modx->resource->_output;
             $contentOutput .= $fts->appendContent([
                 'resource' => $resId,
-                'appends' => $appends,
+                'appends' => $appendClassObjects,
                 'appendRenderedTVIds' => $appendRenderedTVIds,
                 'appendContent' => $appendAlways,
                 ]);
             $ftsContent->fromArray([
                 'content_id' => $resId,
+                'content_parent' => $modx->resource->get('parent'),
                 'content_output' => $contentOutput,
             ]);
             /* Attempt to save the complete Resource output to the index */
@@ -80,24 +85,42 @@ switch ($modx->event->name) {
             break;
         }
         /* Delete Resource from index */
-        $resId = $modx->resource->get('id');
-        $ftsContent = $modx->getObject('FTSContent', ['content_id' => $resId]);
-        if (!$ftsContent->remove()) {
-            $modx->log(modX::LOG_LEVEL_ERROR, __FUNCTION__ . ' could not remove Resource: ' . $resId . ' from the index on line: ' . __LINE__);
-        }
+        $fts->removeIndex($modx->resource->get('id'));
         break;
     case 'OnDocFormSave':
         if (!$resource) {
             $modx->log(modX::LOG_LEVEL_ERROR, __FUNCTION__ . ' could not load the required Resource on line: ' . __LINE__);
             break;
         }
+        $resId = $resource->get('id');
         /* Delete Resource from index if indexable status has changed */
         if (!$fts->indexable($resource)) {
             /* Delete Resource from index */
-            $resId = $resource->get('id');
+            $fts->removeIndex($resId);
+        } else {
+            // Defer to cache save event if indexing full rendered output
+            if ($indexFullRenderedOutput) break;
+            // Create or update
             $ftsContent = $modx->getObject('FTSContent', ['content_id' => $resId]);
-            if (!$ftsContent->remove()) {
-                $modx->log(modX::LOG_LEVEL_ERROR, __FUNCTION__ . ' could not remove Resource: ' . $resId . ' from the index on line: ' . __LINE__);
+            if (!$ftsContent) $ftsContent = $modx->newObject('FTSContent');
+            $content = '';
+            foreach ($appendResourceFields as $field) {
+                $content .= ' ' . $resource->get($field);
+            }
+            $content .= $fts->appendContent([
+                'resource' => $resId,
+                'appends' => $appendClassObjects,
+                'appendRenderedTVIds' => $appendRenderedTVIds,
+                'appendContent' => $appendAlways,
+                ]);
+            $ftsContent->fromArray([
+                'content_id' => $resId,
+                'content_parent' => $resource->get('parent'),
+                'content_output' => $content,
+            ]);
+            /* Attempt to save the complete Resource output to the index */
+            if (!$ftsContent->save()) {
+                $modx->log(modX::LOG_LEVEL_ERROR, __FUNCTION__ . ' could not index the output from Resource: ' . $resId . ' on line: ' . __LINE__);
             }
         }
         break;

@@ -61,7 +61,7 @@ class FullTextSearch
         $vq = $this->modx->query("SHOW VARIABLES LIKE 'version'");
         $vers = $vq->fetch(PDO::FETCH_ASSOC);
         if (version_compare($vers['Value'], '5.6.4', '<')) {
-            $this->modx->log(modX::LOG_LEVEL_ERROR, 'Full-text search requires MySQL 5.6.4 or higher for maximum compatibility.');
+            $this->modx->log(modX::LOG_LEVEL_ERROR, 'FullTextSearch requires MySQL 5.6.4 or higher for maximum compatibility.');
             return false;
         }
 
@@ -151,6 +151,18 @@ class FullTextSearch
         }
         // Return content to be appended
         return ' ' . $appendContent;
+    }
+
+    public function removeIndex($id) {
+        // Quietly cast
+        $id = (int) $id;
+        $ftsContent = $this->modx->getObject('FTSContent', ['content_id' => $id]);
+        if ($ftsContent) {
+            if (!$ftsContent->remove()) {
+                $this->modx->log(modX::LOG_LEVEL_ERROR, 'FullTextSearch could not remove Resource: ' . $id . ' from the index on line: ' . __LINE__);
+            }
+        }
+
     }
 
     /* UTILITY METHODS (@theboxer) */

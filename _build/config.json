@@ -13,16 +13,28 @@
                     "OnDocFormSave",
                     "OnDocFormDelete",
                     "OnDocUnPublished"
-                ]
+                ],
+                "properties": [{
+                    "name": "appendResourceFields",
+                    "value": ""
+                }, {
+                    "name": "appendClassObjects",
+                    "value": ""
+                }, {
+                    "name": "appendRenderedTVIds",
+                    "value": ""
+                }, {
+                    "name": "appendAlways",
+                    "value": ""
+                }, {
+                    "name": "indexFullRenderedOutput",
+                    "value": 1
+                }]
             }],
             "snippets": [{
                 "name": "ftsSearch"
             }]
-        },
-        "systemSettings": [{
-            "key": "index_hidden",
-            "value": "0"
-        }]
+        }
     },
     "database": {
         "tables": ["FTSContent"]
