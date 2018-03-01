@@ -59,13 +59,12 @@ switch ($modx->event->name) {
             $resId = $modx->resource->get('id');
             $ftsContent = $modx->getObject('FTSContent', ['content_id' => $resId]);
             if (!$ftsContent) $ftsContent = $modx->newObject('FTSContent');
-            $contentOutput = $modx->resource->_output;
-            $contentOutput .= $fts->appendContent([
+            $contentOutput = $fts->appendContent([
                 'resource' => $resId,
                 'appends' => $appendClassObjects,
                 'appendRenderedTVIds' => $appendRenderedTVIds,
                 'appendContent' => $appendAlways,
-                ]);
+            ], $modx->resource->_output);
             $ftsContent->fromArray([
                 'content_id' => $resId,
                 'content_parent' => $modx->resource->get('parent'),
@@ -107,12 +106,12 @@ switch ($modx->event->name) {
             foreach ($appendResourceFields as $field) {
                 $content .= ' ' . $resource->get($field);
             }
-            $content .= $fts->appendContent([
+            $content = $fts->appendContent([
                 'resource' => $resId,
                 'appends' => $appendClassObjects,
                 'appendRenderedTVIds' => $appendRenderedTVIds,
                 'appendContent' => $appendAlways,
-                ]);
+            ], $content);
             $ftsContent->fromArray([
                 'content_id' => $resId,
                 'content_parent' => $resource->get('parent'),

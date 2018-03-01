@@ -115,19 +115,21 @@ class FullTextSearch
         return $indexable;
     }
 
-    public function appendContent($options)
+    public function appendContent($options, $content = '')
     {
+        $content = strip_tags($content);
         // Silently fail on these
-        if (!is_array($options) || empty($options['resource'])) return '';
+        if (!is_array($options) || empty($options['resource'])) return $content;
         // Quietly cast
         $resId = (int) $options['resource'];
-        $appendContent = (string) $options['appendContent'];
+        $appendContent = $options['appendContent'];
 
         // Append rendered TV values
         if (!empty($options['appendRenderedTVIds']) && is_array($options['appendRenderedTVIds'])) {
             $c = $this->modx->newQuery('modTemplateVar');
             $c->where([
                 'id:IN' => $options['appendRenderedTVIds'],
+                'OR:name:IN' => $options['appendRenderedTVIds'],
             ]);
             $tvs = $this->modx->getCollection('modTemplateVar', $c);
             foreach ($tvs as $tv) {
@@ -142,15 +144,17 @@ class FullTextSearch
                 // Fetch specified fields from specified objects
                 foreach ($appends as $append) {
                     $appendObjects = $this->modx->getIterator($append['class'], [$append['resource_key'] => $resId]);
-                    foreach ($appendObjects as $appendObject) {
-                        // This is the raw content. Default values for TVs are not fetched this way.
-                        $appendContent .= ' ' . $appendObject->get($append['field']);
+                    if ($appendObjects) {
+                        foreach ($appendObjects as $appendObject) {
+                            // This is the raw content. Default values for TVs are not fetched this way.
+                            $appendContent .= ' ' . $appendObject->get($append['field']);
+                        }
                     }
                 }
             }
         }
         // Return content to be appended
-        return ' ' . $appendContent;
+        return $content . ' ' . strip_tags($appendContent);
     }
 
     public function removeIndex($id) {
