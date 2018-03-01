@@ -117,7 +117,7 @@ class FullTextSearch
 
     public function appendContent($options, $content = '')
     {
-        $content = strip_tags($content);
+        $content = preg_replace('/\s+/', ' ', strip_tags($content));
         // Silently fail on these
         if (!is_array($options) || empty($options['resource'])) return $content;
         // Quietly cast
@@ -154,7 +154,7 @@ class FullTextSearch
             }
         }
         // Return content to be appended
-        return $content . ' ' . strip_tags($appendContent);
+        return $content . ' ' . preg_replace('/\s+/', ' ', strip_tags($appendContent));
     }
 
     public function removeIndex($id) {
