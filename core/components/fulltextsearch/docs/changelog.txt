@@ -1,3 +1,9 @@
+FullTextSearch v0.0.2-dev1
+==========================
+Dev pre-release.
+Added documentation.
+Clean index content.
+
 FullTextSearch v0.0.1-dev1
 ==========================
 Initial dev pre-release.
