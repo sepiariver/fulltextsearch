@@ -1,5 +1,4 @@
 <?php
-
 // Options
 $limit = (int) $modx->getOption('limit', $scriptProperties, 0);
 $parents = array_filter(array_map('trim', explode(',', $modx->getOption('parents', $scriptProperties, ''))));
