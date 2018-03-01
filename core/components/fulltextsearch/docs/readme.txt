@@ -23,6 +23,12 @@ Your situation might call for more features than FullTextSearch currently suppor
 
 After installing FullTextSearch, you need to build the index. This can be done by clearing the site cache and crawling it—by default a Resource's rendered output is added to the index on the event `OnBeforeSaveWebPageCache`. Alternatively, the index will build itself over time whenever a visitor requests a page. If configured as such, the index only builds when a CMS user saves a Resource. **Search results can only be returned from the set of indexed Resources.**
 
+```
+# Recursively crawl all resources with html extension at specified URL, waiting 1s between requests.
+# Response will be saved as static files in the current local directory.
+wget -r -w 1 -A html http://example.com/
+```
+
 ## Usage
 
 ### FullTextSearchIndex Plugin
