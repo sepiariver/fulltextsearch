@@ -1,9 +1,9 @@
 # FullTextSearch
 _MySQL FULLTEXT search for MODX CMS._
 
-MySQL is not a search engine. For full-fledged, enterprise-ready search solutions, MODX CMS supports Solr and Elasticsearch with the well-adopted SimpleSearch Extra. This is the recommended approach for the sites that have sophisticated search requirements and extreme scalability requirements.
+MySQL is not a search engine. For full-fledged, enterprise-ready search solutions, MODX CMS supports Solr and Elasticsearch with the well-adopted SimpleSearch Extra. This is the recommended approach for the sites that have sophisticated search requirements and extreme scalability requirements. SimpleSearch represents a lot of community contribution and the work of amazing developers like Jan Peca. FullTextSearch is not a 'competitor', rather something a little different.
 
-## Why, then?
+## Why?
 For "simple" implementations, SimpleSearch uses relatively limited 'LIKE' queries. AdvSearch relies on the Zend Search library and is arguably more complex to implement. Both of those packages do a lot of work with regards to templating the output, and allowing for configurability, yet MODX users continue to implement custom search solutions.
 
 It seems the most common need, that is not addressed with the above Extras, is the ability to customize a search index's content: "Include the rendered output of this TV, include that Resource field, but not this one, exclude this search term, etc..."
@@ -37,7 +37,7 @@ After installing FullTextSearch, you need to build the index. This can be done b
 
 **IMPORTANT:** currently the Plugin will only ever index a Resource if it is:
 - published and not deleted, because why give users search results for content they can't access?
-- cacheable, to avoid indexing content that is meant to be dynamic or worse, private to specific sessions
+- cacheable, to avoid indexing content that is meant to be dynamic or worse, private to specific sessions. On the event `OnBeforeSaveWebPageCache`, the `$modx->resource->_output` may contain uncacheable MODX tags. It's expected that these will show up in the index content and _not_ be populated with values. This is similar to the behaviour of StatCache, Jason Coward's fast and awesome caching plugin.
 - searchable, to provide CMS users discretion to exclude a Resource from the index
 
 When a Resource is deleted, unpublished, or saved, the Plugin will check these properties and behave accordingly.
