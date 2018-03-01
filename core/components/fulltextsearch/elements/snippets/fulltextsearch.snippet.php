@@ -8,7 +8,7 @@ $expandQuery = $modx->getOption('expandQuery', $scriptProperties, true);
 $searchParam = $modx->getOption('searchParam', $scriptProperties, 'search', true);
 $outputSeparator = $modx->getOption('outputSeparator', $scriptProperties, ',');
 $toPlaceholder = $modx->getOption('toPlaceholder', $scriptProperties, '');
-$debug = $modx->getOption('debug', $scriptProperties, 0);
+$debug = $modx->getOption('debug', $scriptProperties, '');
 $tablePrefix = $modx->getOption('table_prefix');
 
 //Prepare Search
@@ -70,10 +70,10 @@ if ($limit > 0) {
 
 // Set mode
 $modeString = ($expandQuery) ? "WITH QUERY EXPANSION" : "IN NATURAL LANGUAGE MODE";
-$modeString = (strpos($search, '-') === false) && (strpos($search, '+') === false) ? $modeString : "IN BOOLEAN MODE";
+$modeString = (strpos($search, ' -') === false) && (strpos($search, ' +') === false) ? $modeString : "IN BOOLEAN MODE";
 
 // Full-text query
-$ftQuery = $modx->query("SELECT fts.content_id, fts.score
+$queryString = "SELECT fts.content_id, fts.score
     FROM (SELECT
         content_id,
         MATCH (content_output) AGAINST ({$search} {$modeString}) AS score
@@ -82,7 +82,8 @@ $ftQuery = $modx->query("SELECT fts.content_id, fts.score
     ) AS fts
     {$whereString}
     {$limitString};
-");
+    ";
+$ftQuery = $modx->query($queryString);
 
 // Search
 $results = [];
@@ -91,14 +92,30 @@ try {
 } catch (Exception $e) {
     $modx->log(modX::LOG_LEVEL_ERROR, __FUNCTION__ . ' ' . __LINE__ . ' ' . $e->getMessage());
 }
-if (count($results) < 1) return '';
+
+// Debugging
+switch ($debug) {
+    case 'dump':
+        var_dump($queryString);
+        var_dump($results);
+        return __LINE__;
+        break;
+    case 'log':
+        $modx->log(modX::LOG_LEVEL_ERROR, $queryString);
+        $modx->log(modX::LOG_LEVEL_ERROR, print_r($results, true));
+        return __LINE__;
+        break;
+    default:
+        break;
+}
 
 // Handle results
+if (count($results) < 1) return '';
 $output = [];
 if ($scoreThreshold > 0) {
     foreach ($results as $result) {
         if ($result['score'] < $scoreThreshold) continue;
-        $output[] = $result['id'];
+        $output[] = $result['content_id'];
     }
 }
 $output = implode($outputSeparator, $output);
