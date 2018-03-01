@@ -5,9 +5,8 @@ $limit = (int) $modx->getOption('limit', $scriptProperties, 0);
 $parents = array_filter(array_map('trim', explode(',', $modx->getOption('parents', $scriptProperties, ''))));
 $excludeIds = array_filter(array_map('trim', explode(',', $modx->getOption('excludeIds', $scriptProperties, ''))));
 $scoreThreshold = $modx->getOption('scoreThreshold', $scriptProperties, 1.0, true);
-$allowQueryExpansion = $modx->getOption('allowQueryExpansion', $scriptProperties, true);
-$searchStyle = $modx->getOption('searchStyle', $scriptProperties, 'manual');
-$manualSearchParam = $modx->getOption('manualSearchParam', $scriptProperties, 'search', true);
+$expandQuery = $modx->getOption('expandQuery', $scriptProperties, true);
+$searchParam = $modx->getOption('searchParam', $scriptProperties, 'search', true);
 $outputSeparator = $modx->getOption('outputSeparator', $scriptProperties, ',');
 $toPlaceholder = $modx->getOption('toPlaceholder', $scriptProperties, '');
 $debug = $modx->getOption('debug', $scriptProperties, 0);
@@ -15,9 +14,10 @@ $tablePrefix = $modx->getOption('table_prefix');
 
 //Prepare Search
 $search = '';
-switch ($searchStyle) {
+$searchInputMode = ($modx->resource && ((int) $modx->resource->get('id') === (int) $modx->getOption('error_page'))) ? 'url' : 'manual';
+switch ($searchInputMode) {
     case 'manual':
-        $search = $modx->getOption($manualSearchParam, $_REQUEST, '');
+        $search = preg_replace('/[^\w+-]|_/', ' ', $modx->getOption($searchParam, $_REQUEST, ''));
         break;
     case 'url':
         // Parse request
@@ -27,7 +27,7 @@ switch ($searchStyle) {
         // Prepare search phrase
         $search = array();
         foreach ($req as $part) {
-            $part = str_replace(array('-', '_', '.', ';', '"'), ' ', $part);
+            $part = preg_replace('/[^\w+-]|_/', ' ', $part);
             $part = explode(' ', $part);
             foreach ($part as $term) {
                 if (empty($term) || is_numeric($term)) continue;
@@ -69,32 +69,28 @@ if ($limit > 0) {
     $limitString = "LIMIT " . (int) $limit;
 }
 
+// Set mode
+$modeString = ($expandQuery) ? "WITH QUERY EXPANSION" : "IN NATURAL LANGUAGE MODE";
+$modeString = (strpos($search, '-') === false) && (strpos($search, '+') === false) ? $modeString : "IN BOOLEAN MODE";
+
 // Full-text query
 $ftQuery = $modx->query("SELECT fts.content_id, fts.score
     FROM (SELECT
         content_id,
-        MATCH (content_output) AGAINST ({$search} IN NATURAL LANGUAGE MODE) AS score
+        MATCH (content_output) AGAINST ({$search} {$modeString}) AS score
         FROM {$table}
-        WHERE MATCH (content_output) AGAINST ({$search} IN NATURAL LANGUAGE MODE)
+        WHERE MATCH (content_output) AGAINST ({$search}  {$modeString})
     ) AS fts
     {$whereString}
     {$limitString};
 ");
-$results = $ftQuery->fetchAll(PDO::FETCH_ASSOC);
 
-// Only run expanded query if zero results
-if (count($results) < 1 && $allowQueryExpansion) {
-    $ftQuery = $modx->query("SELECT fts.content_id, fts.score
-        FROM (SELECT
-            content_id,
-            MATCH (content_output) AGAINST ({$search} WITH QUERY EXPANSION) AS score
-            FROM {$table}
-            WHERE MATCH (content_output) AGAINST ({$search} WITH QUERY EXPANSION)
-        ) AS fts
-        {$whereString}
-        {$limitString};
-    ");
+// Search
+$results = [];
+try {
     $results = $ftQuery->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    $modx->log(modX::LOG_LEVEL_ERROR, __FUNCTION__ . ' ' . __LINE__ . ' ' . $e->getMessage());
 }
 if (count($results) < 1) return '';
 

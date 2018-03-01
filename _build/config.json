@@ -7,7 +7,7 @@
     "package": {
         "elements": {
             "plugins": [{
-                "name": "ftsIndex",
+                "name": "FullTextSearchIndex",
                 "events": [
                     "OnBeforeSaveWebPageCache",
                     "OnDocFormSave",
@@ -32,7 +32,7 @@
                 }]
             }],
             "snippets": [{
-                "name": "ftsSearch"
+                "name": "FullTextSearch"
             }]
         }
     },
