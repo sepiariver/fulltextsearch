@@ -56,7 +56,7 @@ When a Resource is deleted, unpublished, or saved, the Plugin will check these p
 - parents = (csv) Specify IDs of parents. Only the children of these Resources will be included. Default ''.
 - excludeIds = (csv) Specify IDs of Resources to exclude. Default ''.
 - scoreThreshold = (float) Specify relevancy score, below which Resources will not be returned. Default 1.0.
-- expandQuery = (boolean) Allow MySQL FULLTEXT query expansion, which matches on related terms. Default true.
+- expandQuery = (boolean) Allow MySQL FULLTEXT query expansion, which matches on related terms. Note: this can consume quite a bit more processing power than without query expansion, especially on very large datasets. Default false.
 - searchParam = (string) The $\_REQUEST parameter with the search phrase. Default 'search'.
 - outputSeparator = (string) Separate output. The Snippet returns matching Resource IDs, so the default ',' is most commonly used.
 - toPlaceholder = (string) Send the output to a placeholder of this key. Default '' (return directly).

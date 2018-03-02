@@ -1,3 +1,8 @@
+FullTextSearch v0.0.3-dev1
+==========================
+Dev pre-release.
+Tweaks. Better defaults.
+
 FullTextSearch v0.0.2-dev1
 ==========================
 Dev pre-release.
