@@ -1,6 +1,7 @@
 <?php
 // Options
 $limit = (int) $modx->getOption('limit', $scriptProperties, 0);
+$offset = (int) $modx->getOption('offset', $scriptProperties, 0);
 $parents = array_filter(array_map('trim', explode(',', $modx->getOption('parents', $scriptProperties, ''))));
 $excludeIds = array_filter(array_map('trim', explode(',', $modx->getOption('excludeIds', $scriptProperties, ''))));
 $scoreThreshold = $modx->getOption('scoreThreshold', $scriptProperties, 1.0, true);
@@ -16,7 +17,7 @@ $search = '';
 $searchInputMode = ($modx->resource && ((int) $modx->resource->get('id') === (int) $modx->getOption('error_page'))) ? 'url' : 'manual';
 switch ($searchInputMode) {
     case 'manual':
-        $search = preg_replace('/[^\w+-]|_/', ' ', $modx->getOption($searchParam, $_REQUEST, ''));
+        $search = preg_replace('/[^\w\+\-"]|_/', ' ', $modx->getOption($searchParam, $_REQUEST, ''));
         break;
     case 'url':
         // Parse request
@@ -26,7 +27,7 @@ switch ($searchInputMode) {
         // Prepare search phrase
         $search = array();
         foreach ($req as $part) {
-            $part = preg_replace('/[^\w+-]|_/', ' ', $part);
+            $part = preg_replace('/[^\w\+\-"]|_/', ' ', $part);
             $part = explode(' ', $part);
             foreach ($part as $term) {
                 if (empty($term) || is_numeric($term)) continue;
@@ -57,6 +58,7 @@ if (count($excludeIds) > 0) {
     }
     $wheres[] = "fts.content_id NOT IN (" . implode(',', $excludeIds) . ")";
 }
+$wheres[] = "fts.score > " . floatval($scoreThreshold);
 $whereString = '';
 if (!empty($wheres)) {
     $whereString = 'WHERE ' . implode(' AND ', $wheres);
@@ -65,7 +67,13 @@ if (!empty($wheres)) {
 // Prepare limit
 $limitString = '';
 if ($limit > 0) {
-    $limitString = "LIMIT " . (int) $limit;
+    $limitString = " LIMIT " . (int) $limit;
+}
+
+// Prepare offset
+$offsetString = '';
+if ($offset > 0) {
+    $offsetString = " OFFSET " . (int) $offset;
 }
 
 // Set mode
@@ -73,22 +81,22 @@ $modeString = ($expandQuery) ? "WITH QUERY EXPANSION" : "IN NATURAL LANGUAGE MOD
 $modeString = (strpos($search, ' -') === false) && (strpos($search, ' +') === false) ? $modeString : "IN BOOLEAN MODE";
 
 // Full-text query
-$queryString = "SELECT fts.content_id, fts.score
+$queryString = "SELECT fts.content_id
     FROM (SELECT
         content_id,
+		content_parent,
         MATCH (content_output) AGAINST ({$search} {$modeString}) AS score
         FROM {$table}
         WHERE MATCH (content_output) AGAINST ({$search}  {$modeString})
     ) AS fts
-    {$whereString}
-    {$limitString};
+    {$whereString} {$limitString} {$offsetString};
     ";
 $ftQuery = $modx->query($queryString);
 
 // Search
 $results = [];
 try {
-    $results = $ftQuery->fetchAll(PDO::FETCH_ASSOC);
+    $results = $ftQuery->fetchAll(PDO::FETCH_COLUMN, 0);
 } catch (Exception $e) {
     $modx->log(modX::LOG_LEVEL_ERROR, __FUNCTION__ . ' ' . __LINE__ . ' ' . $e->getMessage());
 }
@@ -111,13 +119,6 @@ switch ($debug) {
 
 // Handle results
 if (count($results) < 1) return '';
-$output = [];
-if ($scoreThreshold > 0) {
-    foreach ($results as $result) {
-        if ($result['score'] < $scoreThreshold) continue;
-        $output[] = $result['content_id'];
-    }
-}
-$output = implode($outputSeparator, $output);
+$output = implode($outputSeparator, $results);
 if (empty($toPlaceholder)) return $output;
 $modx->setPlaceholder($toPlaceholder, $output);
