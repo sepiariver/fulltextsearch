@@ -15,18 +15,27 @@ FullTextSearch defers to listing Snippets like getResources or pdoResources for 
 FullTextSearch is about as easy to set up as SimpleSearch, has no external dependencies, and provides improved performance and features that may fit your use case very well. Use it to easily power "smart" 404 pages.
 
 ## Why not?
-MySQL's FULLTEXT search prefers wide vocabularies—what you would commonly see on a blog or a marketing site with many pages. The performance benefits over standard 'LIKE' queries disappear for small vocabularies. If each row of the FTSContent search index table has very few words in it, FullTextSearch likely isn't the best solution—SimpleSearch would be faster in this case.
+MySQL's FULLTEXT search prefers wide vocabularies--what you would commonly see on a blog or a marketing site with many pages. The performance benefits over standard 'LIKE' queries disappear for small vocabularies. If each row of the FTSContent search index table has very few words in it, FullTextSearch likely isn't the best solution--SimpleSearch would be faster in this case.
 
 Depending on the MySQL storage engine at play, the minimum length of words indexed is 4 characters. If your content has a lot of high-value, often-searched words that are 3 characters or shorter, FullTextSearch isn't the right solution.
 
-Your situation might call for more features than FullTextSearch currently supports. For example, SimpleSearch will generate an extract of each search result, and optionally add an html class attribute to the results template, for highlighting search terms. It also supports faceted search—FullTextSearch does not.
+Your situation might call for more features than FullTextSearch currently supports. For example, SimpleSearch will generate an extract of each search result, and optionally add an html class attribute to the results template, for highlighting search terms. It also supports faceted search--FullTextSearch does not.
 
-After installing FullTextSearch, you need to build the index. This can be done by clearing the site cache and crawling it—by default a Resource's rendered output is added to the index on the event `OnBeforeSaveWebPageCache`. Alternatively, the index will build itself over time whenever a visitor requests a page. If configured as such, the index only builds when a CMS user saves a Resource. **Search results can only be returned from the set of indexed Resources.**
+After installing FullTextSearch, you need to build the index. This can be done by clearing the site cache and crawling it--by default a Resource's rendered output is added to the index on the event `OnBeforeSaveWebPageCache`. Alternatively, the index will build itself over time whenever a visitor requests a page. If configured as such, the index only builds when a CMS user saves a Resource. **Search results can only be returned from the set of indexed Resources.**
 
 ```
 # Recursively crawl all resources with html extension at specified URL, waiting 1s between requests.
 # Response will be saved as static files in the current local directory.
+
 wget -r -w 1 -A html http://example.com/
+
+# If the above doesn't work, the following is less restrictive, but will download assets and images to your local directory. For huge sites this may be undesirable.
+
+wget -r -w 1 http://example.com
+
+# If your robots.txt denies crawling, do this to get around it.
+
+wget -r -w 1 -e robots=off http://example.com
 ```
 
 ## Usage
@@ -39,7 +48,7 @@ wget -r -w 1 -A html http://example.com/
 - appendResourceFields = (csv) MODX Resource fields, the content of which will be appended to the content being indexed. If `indexFullRenderedOutput` is disabled, something needs to be specified here, or in properties below, in order for any content to be indexed. Default ''.
 - appendClassObjects = (json) A JSON array of objects, each with the keys 'class', 'resource_key', and 'field'. The array will be iterated and objects of the specified class will be retrieved. The value of the object's `field` attribute will be added to the indexed content. Default ''.
 - appendRenderedTVIds = (csv) TV IDs (or names), the rendered output of which will be added to the indexed content. Default ''.
-- appendAlways = (string) Add a string to every indexed item. IMPORTANT: given MySQL's built-in algorithm, this would have the effect of adding the words in the string to the list of stop-words—the OPPOSITE of making the words more prominent in search results. Default ''.
+- appendAlways = (string) Add a string to every indexed item. IMPORTANT: given MySQL's built-in algorithm, this would have the effect of adding the words in the string to the list of stop-words--the OPPOSITE of making the words more prominent in search results. Default ''.
 
 **IMPORTANT:** currently the Plugin will only ever index a Resource if it is:
 - published and not deleted, because why give users search results for content they can't access?
@@ -84,3 +93,10 @@ Don't expand query (more restrictive matching) but lower the scoreThreshold, sor
     &limit=`0`
 ]]
 ```
+
+Dump the SQL, and the results. If you run the SQL in your database client, you can see what’s happening behind the scenes...
+
+```
+[[!FullTextSearch? &debug=`dump`]]
+```
+
