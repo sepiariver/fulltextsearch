@@ -21,7 +21,11 @@ Depending on the MySQL storage engine at play, the minimum length of words index
 
 Your situation might call for more features than FullTextSearch currently supports. For example, SimpleSearch will generate an extract of each search result, and optionally add an html class attribute to the results template, for highlighting search terms. It also supports faceted search—FullTextSearch does not.
 
-After installing FullTextSearch, you need to build the index. This can be done by clearing the site cache and crawling it—by default a Resource's rendered output is added to the index on the event `OnBeforeSaveWebPageCache`. Alternatively, the index will build itself over time whenever a visitor requests a page. If configured as such, the index only builds when a CMS user saves a Resource. **Search results can only be returned from the set of indexed Resources.**
+After installing FullTextSearch, you need to build the index. This can be done by clearing the site cache and crawling it—by default a Resource's rendered output is added to the index on the event `OnBeforeSaveWebPageCache`. Alternatively, the index will build itself over time whenever a visitor requests a page. If configured as such, the index only builds when a CMS user saves a Resource. 
+
+**Search results can only be returned from the set of indexed Resources.**
+
+NOTE: MySQL's relevancy algorithm is based on the concept of "rarity". If a word appears in very few Resources, those that have it will score very high for it. If a word appears in over 50% of Resources, it is ignored. To get the most intuitive search results for your site's content, experiment with the `scoreThreshold` property of the FullTextSearch Snippet, and possibly `expandQuery`. Also try different indexing methods via the Plugin.
 
 ```
 # Recursively crawl all resources with html extension at specified URL, waiting 1s between requests.
@@ -65,7 +69,7 @@ When a Resource is deleted, unpublished, or saved, the Plugin will check these p
 - parents = (csv) Specify IDs of parents. Only the children of these Resources will be included. Default ''.
 - excludeIds = (csv) Specify IDs of Resources to exclude. Default ''.
 - scoreThreshold = (float) Specify relevancy score, below which Resources will not be returned. Default 1.0.
-- expandQuery = (boolean) Allow MySQL FULLTEXT query expansion, which matches on related terms. Note: this can consume quite a bit more processing power than without query expansion, especially on very large datasets. Default false.
+- expandQuery = (boolean) Allow MySQL FULLTEXT query expansion, which matches on related terms. Note: this can consume a lot more processing power than without query expansion, especially on very large datasets. Default false.
 - searchParam = (string) The $\_REQUEST parameter with the search phrase. Default 'search'.
 - outputSeparator = (string) Separate output. The Snippet returns matching Resource IDs, so the default ',' is most commonly used.
 - toPlaceholder = (string) Send the output to a placeholder of this key. Default '' (return directly).
@@ -84,11 +88,14 @@ Default behaviour, sorted by relevancy. If you made this call on the MODX `error
 ]]
 ```
 
-Don't expand query (more restrictive matching) but lower the scoreThreshold, sorted by latest publishedon date.
+Expand query (matching "related" terms based on MySQL's built-in algorithm) but increase the scoreThreshold, sorted by latest publishedon date.
 ```
 [[!getResources?
     &parents=`-1`
-    &resources=`[[!FullTextSearch? &expandQuery=`0` &scoreThreshold=`0.5`]]`
+    &resources=`[[!FullTextSearch?
+        &scoreThreshold=`1.5`
+        &expandQuery=`1`
+    ]]`
     &tpl=`search_results.tpl`
     &limit=`0`
 ]]
