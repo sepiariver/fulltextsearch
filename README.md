@@ -26,7 +26,16 @@ After installing FullTextSearch, you need to build the index. This can be done b
 ```
 # Recursively crawl all resources with html extension at specified URL, waiting 1s between requests.
 # Response will be saved as static files in the current local directory.
+
 wget -r -w 1 -A html http://example.com/
+
+# If the above doesn't work, the following is less restrictive, but will download assets and images to your local directory. For huge sites this may be undesirable.
+
+wget -r -w 1 http://example.com
+
+# If your robots.txt denies crawling, do this to get around it.
+
+wget -r -w 1 -e robots=off http://example.com
 ```
 
 ## Usage
@@ -84,3 +93,10 @@ Don't expand query (more restrictive matching) but lower the scoreThreshold, sor
     &limit=`0`
 ]]
 ```
+
+Dump the SQL, and the results. If you run the SQL in your database client, you can see what’s happening behind the scenes...
+
+```
+[[!FullTextSearch? &debug=`dump`]]
+```
+
