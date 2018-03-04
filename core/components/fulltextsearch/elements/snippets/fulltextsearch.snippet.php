@@ -41,11 +41,11 @@ switch ($searchInputMode) {
 }
 
 // Important!
-$search = $modx->quote($search);
+$search = $modx->quote(' ' . $search);
 $table = $tablePrefix . 'fts_content';
 
 // Prepare IDs and set conditions
-$wheres = [];
+$wheres = ["fts.score > " . floatval($scoreThreshold)];
 if (count($parents) > 0) {
     foreach ($parents as $pk => $pv) {
         $parents[$pk] = $modx->quote($pv, PDO::PARAM_INT);
@@ -58,7 +58,6 @@ if (count($excludeIds) > 0) {
     }
     $wheres[] = "fts.content_id NOT IN (" . implode(',', $excludeIds) . ")";
 }
-$wheres[] = "fts.score > " . floatval($scoreThreshold);
 $whereString = '';
 if (!empty($wheres)) {
     $whereString = 'WHERE ' . implode(' AND ', $wheres);
@@ -78,7 +77,10 @@ if ($offset > 0) {
 
 // Set mode
 $modeString = ($expandQuery) ? "WITH QUERY EXPANSION" : "IN NATURAL LANGUAGE MODE";
-$modeString = (strpos($search, ' -') === false) && (strpos($search, ' +') === false) ? $modeString : "IN BOOLEAN MODE";
+$modeString =
+	(strpos($search, ' -') === false) &&
+	(strpos($search, ' +') === false) &&
+	(strpos($search, '"') === false) ? $modeString : "IN BOOLEAN MODE";
 
 // Full-text query
 $queryString = "SELECT fts.content_id
