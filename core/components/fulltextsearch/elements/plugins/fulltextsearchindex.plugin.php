@@ -5,7 +5,11 @@
  * Manages content in the fts_content table, for indexing.
  *
  * OPTIONS:
- * appends - (json)    Example: [{"class":"modTemplateVarResource", "resource_key":"contentid", "field":"value"}]
+ * appendResourceFields - (csv)     List of Resource fields' content to index
+ * appendClassObjects - (json)      @TODO
+ * appendRenderedTVIds - (csv)      ID or name of TV content to render and index
+ * appendAlways - (string)          Always append to index, adding to list of stop-words
+ * indexFullRenderedOutput - (bool) Enable / disable indexing full rendered content on cache event
  *
  * @package FullTextSearch
  * @author YJ Tso <info@sepiariver.com>
@@ -111,7 +115,7 @@ switch ($modx->event->name) {
                 'appends' => $appendClassObjects,
                 'appendRenderedTVIds' => $appendRenderedTVIds,
                 'appendContent' => $appendAlways,
-            ], $content);
+            ], $content, true); // processContent
             $ftsContent->fromArray([
                 'content_id' => $resId,
                 'content_parent' => $resource->get('parent'),

@@ -115,9 +115,14 @@ class FullTextSearch
         return $indexable;
     }
 
-    public function appendContent($options, $content = '')
+    public function appendContent($options, $content = '', $processContent = false)
     {
+        if ($processContent) {
+            $this->modx->parser->processElementTags('', $content, false, true, '[[', ']]', array(), $maxIterations);
+            $this->modx->parser->processElementTags('', $content, false, true, '[[', ']]', array(), $maxIterations);
+        }
         $content = preg_replace('/\s+/', ' ', strip_tags($content));
+
         // Silently fail on these
         if (!is_array($options) || empty($options['resource'])) return $content;
         // Quietly cast
@@ -207,7 +212,7 @@ class FullTextSearch
     {
         if (!is_array($phs)) $phs = [];
         if (strpos($tpl, '@INLINE ') !== false) {
-            $content = str_replace('@INLINE', '', $tpl);
+            $content = str_replace('@INLINE ', '', $tpl);
             /** @var \modChunk $chunk */
             $chunk = $this->modx->newObject('modChunk', array('name' => 'inline-' . uniqid()));
             $chunk->setCacheable(false);
