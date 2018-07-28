@@ -91,7 +91,8 @@ $queryString = "SELECT fts.content_id
         FROM {$table}
         WHERE MATCH (content_output) AGAINST ({$search}  {$modeString})
     ) AS fts
-    {$whereString} {$limitString} {$offsetString} ORDER BY fts.score DESC;
+    {$whereString} ORDER BY fts.score DESC
+    {$limitString} {$offsetString};
     ";
 $ftQuery = $modx->query($queryString);
 
