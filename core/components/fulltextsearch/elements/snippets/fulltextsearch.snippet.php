@@ -46,13 +46,13 @@ $table = $tablePrefix . 'fts_content';
 
 // Prepare IDs and set conditions
 $wheres = ["fts.score > " . floatval($scoreThreshold)];
-if (count($parents) > 0) {
+if (is_array($parents) && count($parents) > 0) {
     foreach ($parents as $pk => $pv) {
         $parents[$pk] = $modx->quote($pv, PDO::PARAM_INT);
     }
     $wheres[] = "fts.content_parent IN (" . implode(',', $parents) . ")";
 }
-if (count($excludeIds) > 0) {
+if (is_array($excludeIds) && count($excludeIds) > 0) {
     foreach ($excludeIds as $ek => $ev) {
         $excludeIds[$ek] = $modx->quote($ev, PDO::PARAM_INT);
     }
@@ -86,12 +86,12 @@ $modeString =
 $queryString = "SELECT fts.content_id
     FROM (SELECT
         content_id,
-		content_parent,
+	content_parent,
         MATCH (content_output) AGAINST ({$search} {$modeString}) AS score
         FROM {$table}
         WHERE MATCH (content_output) AGAINST ({$search}  {$modeString})
     ) AS fts
-    {$whereString} {$limitString} {$offsetString};
+    {$whereString} {$limitString} {$offsetString} ORDER BY fts.score DESC;
     ";
 $ftQuery = $modx->query($queryString);
 
@@ -120,7 +120,7 @@ switch ($debug) {
 }
 
 // Handle results
-if (count($results) < 1) return '';
-$output = implode($outputSeparator, $results);
+if (count($results) < 1) return ''; // Pass empty string to wrapping Snippet
+$output = implode($outputSeparator, $results); // Output list of Resource ID's
 if (empty($toPlaceholder)) return $output;
 $modx->setPlaceholder($toPlaceholder, $output);
