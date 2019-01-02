@@ -118,6 +118,7 @@ class FullTextSearch
     public function appendContent($options, $content = '', $processContent = false)
     {
         if ($processContent) {
+            $maxIterations= intval($this->modx->getOption('parser_max_iterations',null,10));
             $this->modx->parser->processElementTags('', $content, false, true, '[[', ']]', array(), $maxIterations);
             $this->modx->parser->processElementTags('', $content, false, true, '[[', ']]', array(), $maxIterations);
         }
