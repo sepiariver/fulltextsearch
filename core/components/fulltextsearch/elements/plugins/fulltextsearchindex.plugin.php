@@ -5,7 +5,7 @@
  * Manages content in the fts_content table, for indexing.
  *
  * OPTIONS:
- * appendResourceFields - (csv)     List of Resource fields' content to index
+ * indexResourceFields - (csv)     List of Resource fields' content to index
  * appendClassObjects - (json)      @TODO
  * appendRenderedTVIds - (csv)      ID or name of TV content to render and index
  * appendAlways - (string)          Always append to index, adding to list of stop-words
@@ -30,23 +30,23 @@
  * Place, Suite 330, Boston, MA 02111-1307 USA
  **/
 
-// OPTIONS
-$appendResourceFields = array_filter(array_map('trim', explode(',', $modx->getOption('appendResourceFields', $scriptProperties, ''))));
-$appendClassObjects = $modx->getOption('appendClassObjects', $scriptProperties, '');
-$appendRenderedTVIds = array_filter(array_map('trim', explode(',', $modx->getOption('appendRenderedTVIds', $scriptProperties, ''))));
-$appendAlways = $modx->getOption('appendAlways', $scriptProperties, '');
-$indexFullRenderedOutput = $modx->getOption('indexFullRenderedOutput', $scriptProperties, true);
-
 // Paths
 $ftsPath = $modx->getOption('fulltextsearch.core_path', null, $modx->getOption('core_path') . 'components/fulltextsearch/');
 $ftsPath .= 'model/fulltextsearch/';
 
 // Get Class
-if (file_exists($ftsPath . 'fulltextsearch.class.php')) $fts = $modx->getService('fulltextsearch', 'FullTextSearch', $ftsPath, $scriptProperties);
+if (file_exists($ftsPath . 'fulltextsearch.class.php')) $fts = $modx->getService('fulltextsearch', 'FullTextSearch', $ftsPath);
 if (!($fts instanceof FullTextSearch)) {
     $modx->log(modX::LOG_LEVEL_ERROR, __FUNCTION__ . ' could not load the required class on line: ' . __LINE__);
     return;
 }
+
+// OPTIONS
+$indexFullRenderedOutput = $modx->getOption('indexFullRenderedOutput', $scriptProperties, $fts->getOption('index_full_rendered_output', null, false));
+$indexResourceFields = array_filter(array_map('trim', explode(',', $modx->getOption('indexResourceFields', $scriptProperties, $fts->getOption('index_resource_fields', null, '')))));
+$appendClassObjects = $modx->getOption('appendClassObjects', $scriptProperties, $fts->getOption('append_class_objects', null, ''));
+$appendRenderedTVIds = array_filter(array_map('trim', explode(',', $modx->getOption('appendRenderedTVIds', $scriptProperties, $fts->getOption('append_rendered_tv_ids', null, '')))));
+$appendAlways = $modx->getOption('appendAlways', $scriptProperties, $fts->getOption('append_always', null, ''));
 
 switch ($modx->event->name) {
 
@@ -107,7 +107,7 @@ switch ($modx->event->name) {
             $ftsContent = $modx->getObject('FTSContent', ['content_id' => $resId]);
             if (!$ftsContent) $ftsContent = $modx->newObject('FTSContent');
             $content = '';
-            foreach ($appendResourceFields as $field) {
+            foreach ($indexResourceFields as $field) {
                 $content .= ' ' . $resource->get($field);
             }
             $content = $fts->appendContent([

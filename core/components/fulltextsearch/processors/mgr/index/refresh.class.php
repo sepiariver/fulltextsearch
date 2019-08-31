@@ -21,14 +21,16 @@ class IndexRefreshProcessor extends modProcessor {
 
         $resourceIds = array_filter(array_map('trim', explode(',', $this->getProperty('resourceIds', ''))));
         $excludeIds = array_filter(array_map('trim', explode(',', $this->getProperty('excludeIds', ''))));
-        $resourceFields = array_filter(array_map('trim', explode(',', $this->getProperty('resourceFields', ''))));
-        $classObjects = $this->getProperty('classObjects', ''); // JSON
-        $renderedTVIds = array_filter(array_map('trim', explode(',', $this->getProperty('renderedTVIds', ''))));
-        $appendAlways = $this->getProperty('appendAlways', ''); // String content stop-words
+        $resourceFields = array_filter(array_map('trim', explode(',', $this->getProperty('resourceFields', $this->fts->getOption('index_resource_fields', null, false)))));
+        $classObjects = $this->getProperty('classObjects', $this->fts->getOption('append_class_objects', null, '')); // JSON
+        $renderedTVIds = array_filter(array_map('trim', explode(',', $this->getProperty('renderedTVIds', $this->fts->getOption('append_rendered_tv_ids', null, '')))));
+        $appendAlways = $this->getProperty('appendAlways', $this->fts->getOption('append_always', null, '')); // String content stop-words
         $contexts = array_filter(array_map('trim', explode(',', $this->getProperty('contexts', ''))));
 
         if (empty($resourceFields)) {
-            return $this->failure('No resource fields specified to index');
+            $msg = 'No resource fields specified to index';
+            $this->modx->log(modX::LOG_LEVEL_ERROR, $msg);
+            return $this->failure($msg);
         }
 
         $c = $this->modx->newQuery('modResource');
@@ -80,8 +82,9 @@ class IndexRefreshProcessor extends modProcessor {
             }
         }
 
-        
-        return $this->success('Total processed: ' . $total . ' Attempted to create: ' . $created . ' Attempted to update: ' . $updated . ' Failed: ' . $failed);
+        $msg = 'Total processed: ' . $total . ' Attempted to create: ' . $created . ' Attempted to update: ' . $updated . ' Failed: ' . $failed;
+        $this->modx->log(modX::LOG_LEVEL_INFO, $msg);
+        return $this->success($msg);
     }
 }
 return 'IndexRefreshProcessor';

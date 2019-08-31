@@ -7,6 +7,10 @@ $xpdo_meta_map['FTSContent']= array (
   'version' => '1.1',
   'table' => 'fts_content',
   'extends' => 'xPDOSimpleObject',
+  'tableMeta' => 
+  array (
+    'engine' => 'InnoDB',
+  ),
   'fields' => 
   array (
     'content_id' => 0,

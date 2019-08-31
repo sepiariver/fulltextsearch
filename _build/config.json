@@ -3,7 +3,7 @@
     "lowCaseName": "fulltextsearch",
     "description": "MySQL FULLTEXT search for MODX CMS.",
     "author": "YJ Tso <info@sepiariver.com>",
-    "version": "0.0.5-dev1",
+    "version": "0.1.0-dev1",
     "package": {
         "elements": {
             "plugins": [{
@@ -15,7 +15,7 @@
                     "OnDocUnPublished"
                 ],
                 "properties": [{
-                    "name": "appendResourceFields",
+                    "name": "indexResourceFields",
                     "value": ""
                 }, {
                     "name": "appendClassObjects",
@@ -44,7 +44,7 @@
                 "icon": "",
                 "menuIndex": 99,
                 "params": "",
-                "handler": "var topic = '/fulltextsearch/mgr/index/refresh/';this.console = MODx.load({xtype: 'modx-console',register: 'mgr',topic: topic,show_filename: 0});this.console.show(Ext.getBody());MODx.Ajax.request({url: MODx.config.assets_url+'components/fulltextsearch/connector.php',params: { action: 'mgr/index/refresh', register: 'mgr' , topic: topic, resourceFields: 'pagetitle,longtitle,description,alias,content'},listeners: {'success': {fn:function() {this.console.fireEvent('complete');this.console = null;},scope:this}}});return false;"
+                "handler": "var topic = '/fulltextsearch/mgr/index/refresh/';this.console = MODx.load({xtype: 'modx-console',register: 'mgr',topic: topic,show_filename: 0});this.console.show(Ext.getBody());MODx.Ajax.request({url: MODx.config.assets_url+'components/fulltextsearch/connector.php',params: { action: 'mgr/index/refresh', register: 'mgr' , topic: topic},listeners: {'success': {fn:function() {this.console.fireEvent('complete');this.console = null;},scope:this}}});return false;"
             }
         ],
         "actions": [
@@ -54,6 +54,37 @@
                 "hasLayout": 0,
                 "langTopics": "fulltextsearch:default",
                 "assets": ""
+            }
+        ],
+        "systemSettings": [
+            {
+                "key": "index_full_rendered_output",
+                "type": "combo-boolean",
+                "area": "default",
+                "value": "0"
+            },{
+                "key": "index_resource_fields",
+                "type": "textfield",
+                "area": "default",
+                "value": "pagetitle,longtitle,description,content"
+            },
+            {
+                "key": "append_class_objects",
+                "type": "textarea",
+                "area": "default",
+                "value": ""
+            },
+            {
+                "key": "append_rendered_tv_ids",
+                "type": "textfield",
+                "area": "default",
+                "value": ""
+            },
+            {
+                "key": "append_always",
+                "type": "textfield",
+                "area": "default",
+                "value": ""
             }
         ]
     },
