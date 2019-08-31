@@ -118,9 +118,11 @@ class FullTextSearch
     public function appendContent($options, $content = '', $processContent = false)
     {
         if ($processContent) {
-            $maxIterations= intval($this->modx->getOption('parser_max_iterations',null,10));
-            $this->modx->parser->processElementTags('', $content, false, true, '[[', ']]', array(), $maxIterations);
-            $this->modx->parser->processElementTags('', $content, false, true, '[[', ']]', array(), $maxIterations);
+            /** @var \modChunk $chunk */
+            $chunk = $this->modx->newObject('modChunk', array('name' => 'inline-' . uniqid()));
+            $chunk->setCacheable(false);
+
+            $content = $chunk->process([], $content);
         }
         $content = preg_replace('/\s+/', ' ', strip_tags($content));
 
