@@ -45,12 +45,23 @@ class IndexRefreshProcessor extends modProcessor {
         $total = 0;
         $created = 0;
         $updated = 0;
+        $removed = 0;
         $failed = 0;
         foreach ($resources as $resource) {
+            // Count stuff
             $total++;
+            // Setup Resource
             $resId = $resource->get('id');
-            $this->modx->log(modX::LOG_LEVEL_INFO, 'Indexing Resource: ' . $resId);
-            // Create or update
+            $this->modx->log(modX::LOG_LEVEL_INFO, 'Evaluating Resource: ' . $resId);
+            // Check indexable Resource
+            if (!$this->fts->indexable($resource)) {
+                // Delete Resource from index
+                $removal = $this->fts->removeIndex($resId);
+                $this->modx->log(modX::LOG_LEVEL_INFO, 'Unindexable Resource: ' . $resId);
+                if ($removal) $removed++;
+                continue;
+            } 
+            // Create or update FTS Content
             $ftsContent = $this->modx->getObject('FTSContent', ['content_id' => $resId]);
             if (!$ftsContent) {
                 $ftsContent = $this->modx->newObject('FTSContent');
@@ -58,31 +69,32 @@ class IndexRefreshProcessor extends modProcessor {
             } else {
                 $updated++;
             }
+            // Setup content
             $content = '';
             foreach ($resourceFields as $field) {
                 $content .= ' ' . $resource->get($field);
             }
-            
+            // Process content
             $processedContent = $this->fts->appendContent([
                 'resource' => $resource,
                 'appends' => $classObjects,
                 'appendRenderedTVIds' => $renderedTVIds,
                 'appendContent' => $appendAlways,
             ], $content, true); // processContent
-
+            // Populate FTS Content object
             $ftsContent->fromArray([
                 'content_id' => $resId,
                 'content_parent' => $resource->get('parent'),
                 'content_output' => $processedContent,
             ]);
-            /* Attempt to save the complete Resource output to the index */
+            // Attempt to save FTS Content
             if (!$ftsContent->save()) {
                 $this->failure('Failed to index Resource: ' . $resId);
                 $failed++;
             }
         }
-
-        $msg = 'Total processed: ' . $total . ' Attempted to create: ' . $created . ' Attempted to update: ' . $updated . ' Failed: ' . $failed;
+        // Output
+        $msg = 'Total processed: ' . $total . ' Attempted to create: ' . $created . ' Attempted to update: ' . $updated .  ' Removed: ' . $removed . ' Failed: ' . $failed;
         $this->modx->log(modX::LOG_LEVEL_INFO, $msg);
         return $this->success($msg);
     }

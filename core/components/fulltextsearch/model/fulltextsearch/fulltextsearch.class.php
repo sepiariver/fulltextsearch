@@ -187,15 +187,19 @@ class FullTextSearch
     }
 
     public function removeIndex($id) {
-        // Quietly cast
         $id = (int) $id;
         $ftsContent = $this->modx->getObject('FTSContent', ['content_id' => $id]);
         if ($ftsContent) {
             if (!$ftsContent->remove()) {
                 $this->modx->log(modX::LOG_LEVEL_ERROR, 'FullTextSearch could not remove Resource: ' . $id . ' from the index on line: ' . __LINE__);
+                return false;
+            } else {
+                return true;
             }
+        } else {
+            $this->modx->log(modX::LOG_LEVEL_WARN, 'No index for Resource: ' . $id . ' was found.');
+            return false;
         }
-
     }
 
     /* UTILITY METHODS (@theboxer) */
