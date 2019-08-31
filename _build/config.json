@@ -40,7 +40,7 @@
                 "text": "fulltextsearch",
                 "description": "fulltextsearch.menu_desc",
                 "action": 1,
-                "parent": "components",
+                "parent": "refresh_site",
                 "icon": "",
                 "menuIndex": 99,
                 "params": "",

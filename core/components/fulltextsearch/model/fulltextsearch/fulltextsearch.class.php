@@ -117,19 +117,39 @@ class FullTextSearch
 
     public function appendContent($options, $content = '', $processContent = false)
     {
+        // Silently fail on these
+        if (!is_array($options) || empty($options['resource'])) return $content;
+        // Resource
+        $resource = $options['resource'];
+        if (is_numeric($resource)) {
+            $resId = (int) abs($resource);
+            $resource = $this->modx->getObject('modResource', $resId);
+        } elseif ($resource instanceof modResource) {
+            $resId = $resource->get('id');
+        } else {
+            return $content;
+        }
+
+        // Run content through MODX parser
         if ($processContent) {
+            $tempR = $this->modx->resource;
+            $this->modx->resource = $resource;
+            $tempC = $this->modx->context;
+            $this->modx->context = $this->modx->getContext($resource->get('context_key'));
+            $this->modx->log(modX::LOG_LEVEL_INFO, 'Processing content for Resource ' . $this->modx->resource->get('id') . ' in Context ' . $this->modx->context->key);
             /** @var \modChunk $chunk */
             $chunk = $this->modx->newObject('modChunk', array('name' => 'inline-' . uniqid()));
             $chunk->setCacheable(false);
-
             $content = $chunk->process([], $content);
+            $this->modx->resource = $tempR;
+            $this->modx->context = $tempC;
+            //$this->modx->log(modX::LOG_LEVEL_INFO, 'Restoring Context ' . $this->modx->context->key);
         }
-        $content = preg_replace('/\s+/', ' ', strip_tags($content));
 
-        // Silently fail on these
-        if (!is_array($options) || empty($options['resource'])) return $content;
-        // Quietly cast
-        $resId = (int) $options['resource'];
+        // Text only for index
+        $content = preg_replace('/\s+/', ' ', strip_tags($content));
+        
+        // Always appended
         $appendContent = $options['appendContent'];
 
         // Append rendered TV values
@@ -144,6 +164,7 @@ class FullTextSearch
                 $appendContent .= ' ' . $tv->renderOutput($resId);
             }
         }
+
         // Append arbitrary object field values
         if (!empty($options['appends'])) {
             // Convert from JSON

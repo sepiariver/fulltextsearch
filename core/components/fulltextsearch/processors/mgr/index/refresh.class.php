@@ -47,6 +47,7 @@ class IndexRefreshProcessor extends modProcessor {
         foreach ($resources as $resource) {
             $total++;
             $resId = $resource->get('id');
+            $this->modx->log(modX::LOG_LEVEL_INFO, 'Indexing Resource: ' . $resId);
             // Create or update
             $ftsContent = $this->modx->getObject('FTSContent', ['content_id' => $resId]);
             if (!$ftsContent) {
@@ -59,14 +60,14 @@ class IndexRefreshProcessor extends modProcessor {
             foreach ($resourceFields as $field) {
                 $content .= ' ' . $resource->get($field);
             }
-//$this->modx->log(modX::LOG_LEVEL_ERROR, print_r($this->fts, true));
+            
             $processedContent = $this->fts->appendContent([
-                'resource' => $resId,
+                'resource' => $resource,
                 'appends' => $classObjects,
                 'appendRenderedTVIds' => $renderedTVIds,
                 'appendContent' => $appendAlways,
             ], $content, true); // processContent
-            $this->modx->log(modX::LOG_LEVEL_ERROR, $processedContent);
+
             $ftsContent->fromArray([
                 'content_id' => $resId,
                 'content_parent' => $resource->get('parent'),
