@@ -57,8 +57,9 @@ wget -r -w 1 -e robots=off http://example.com
 ### FullTextSearchIndex Plugin
 
 #### Properties
-(All optional)
-- indexFullRenderedOutput = (boolean) If enabled, Resources will be indexed as they are saved to cache, with the text of the fully-rendered response. This _does_ include content in global nav elements, however the words therein would be _excluded automatically_ from search queries via MySQL's built-in algorithm. (Any word that appears in more than 50% of the index will be ignored.) If this property is disabled, Resources are only indexed when a CMS user saves a document or uses the menu action, and only the field(s) configured in `indexResourceFields` will be added to the index. Default disabled.
+(All optional. System Settings are installed using snake_case_keys (e.g. `fulltextsearch.index_resource_fields`) per the established pattern for Settings. Settings serve as defaults for the following Plugin Properties.
+
+- indexFullRenderedOutput = (boolean) If enabled, Resources will be indexed as they are saved to cache, with the text of the fully-rendered response. This would include content from global nav elements, however the words therein would be _excluded automatically_ from search queries via MySQL's built-in algorithm. (Any word that appears in more than 50% of the index will be ignored.) If this property is disabled, Resources are only indexed when a CMS user saves a document or uses the menu action (in which case only the field(s) configured in `indexResourceFields` will be included). Strips `<style>` and `<script>` tags. Default disabled.
 - indexResourceFields = (csv) MODX Resource fields, the content of which will be indexed. Only used if `indexFullRenderedOutput` is disabled, in which case something needs to be specified here or in `append...` properties, in order for anything to be indexed. Default ''.
 - appendClassObjects = (json) A JSON array of objects, each with the keys `class`, `resource_key`, and `field`. The array will be iterated and objects of the specified class will be retrieved. The value of the object's `field` attribute will be added to the indexed content. NOTE: this can only be used with objects where the value and the Resource ID reference is on a single table. Default ''.
 - appendRenderedTVIds = (csv) TV IDs (or names), the rendered output of which will be added to the indexed content. Default ''.
@@ -66,8 +67,8 @@ wget -r -w 1 -e robots=off http://example.com
 
 **IMPORTANT:** currently the Plugin will only ever index a Resource if it is:
 - published and not deleted, because why give users search results for content they can't access?
-- cacheable, to avoid indexing content that is meant to be dynamic or worse, private to specific sessions. On the event `OnBeforeSaveWebPageCache`, the `$modx->resource->_output` may contain uncacheable MODX tags. It's expected that these will show up in the index content and _not_ be populated with values. This is similar to the behaviour of StatCache, Jason Coward's fast and awesome caching plugin.
 - searchable, to provide CMS users discretion to exclude a Resource from the index
+- cacheable, to avoid indexing content that is meant to be dynamic or worse, private to specific sessions. On the event `OnBeforeSaveWebPageCache`, the `$modx->resource->_output` may contain uncacheable MODX tags. (Similarly if one of the `indexResourceFields` contains uncacheable tags, they will be indexed.) It's expected that these will show up in the index and _not_ be populated with values. This is similar to the behaviour of StatCache, Jason Coward's fast and awesome caching plugin.
 
 When a Resource is deleted, unpublished, or saved, the Plugin will check these properties and behave accordingly.
 

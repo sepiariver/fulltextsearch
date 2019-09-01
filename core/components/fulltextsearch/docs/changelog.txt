@@ -1,3 +1,10 @@
+FullTextSearch v0.2.0-dev1
+==========================
+System Settings
+Logic to handle various use cases
+Menu action to index based on indexResourceFields
+Bunch of fixes and tweaks
+
 FullTextSearch v0.0.3-dev1
 ==========================
 Dev pre-release.

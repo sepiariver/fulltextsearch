@@ -116,7 +116,6 @@ switch ($modx->event->name) {
             foreach ($indexResourceFields as $field) {
                 $content .= ' ' . $resource->get($field);
             }
-            $modx->log(modX::LOG_LEVEL_ERROR, $content);
             // Append additional content
             $contentOutput = $fts->appendContent([
                 'resource' => $resId,
