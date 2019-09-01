@@ -90,12 +90,14 @@ When a Resource is deleted, unpublished, or saved, the Plugin will check these p
 
 Default behaviour, sorted by relevancy. If you made this call on the MODX `error_page` Resource, then any 404s would trigger a search based on the URL.
 ```
+[[!FullTextSearch? &toPlaceholder=`fts_results`]]
 [[!getResources?
     &parents=`-1`
-    &resources=`[[!FullTextSearch]]`
+    &resources=`[[!+fts_results]]`
+    &limit=`20`
+    &sortby=`FIELD(modResource.id, [[!+fts_results]])`
+    &sortdir=`ASC`
     &tpl=`search_results.tpl`
-    &sortby=`FIELD(modResource.id,[[!FullTextSearch]])`
-    &limit=`0`
 ]]
 ```
 
