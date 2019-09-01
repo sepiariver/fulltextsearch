@@ -3,6 +3,8 @@ _MySQL FULLTEXT search for MODX CMS._
 
 MySQL is not a search engine. For full-fledged, enterprise-ready search solutions, MODX CMS supports Solr and Elasticsearch with the well-adopted SimpleSearch Extra. This is the recommended approach for the sites that have sophisticated search requirements and extreme scalability requirements. SimpleSearch represents a lot of community contribution and the work of amazing developers like Jan Peca. FullTextSearch is not a "competitor", rather something a little different.
 
+> Read the blog post [here](https://sepiariver.com/modx/mysql-fulltext-search-for-modx-cms/).
+
 ## Why?
 For "simple" implementations, without a third-party engine, SimpleSearch uses relatively limited `LIKE` queries. AdvSearch relies on the Zend Search library and is arguably more complex to implement. Both of those packages do a lot of work with regards to templating the output, and providing configurability of the executed MySQL queries, but both query against the standard MODX tables—sometimes multiple tables, which is when performance can become an issue.
 
@@ -31,7 +33,7 @@ Depending on the MySQL storage engine at play, the minimum length of words index
 
 Your situation might call for more features than FullTextSearch currently supports. For example, SimpleSearch will generate an extract of each search result, and optionally add an html class attribute to the results template, for highlighting search terms.
 
-After installing FullTextSearch, you need to build the index. This can be done by clearing the site cache and crawling it—by default a Resource's rendered output is added to the index on the event `OnBeforeSaveWebPageCache`. Alternatively, the index will build itself over time whenever a visitor requests a page. If configured as such, the index only builds when a CMS user saves a Resource.
+After installing FullTextSearch, you need to build the index. This can be done by clearing the site cache and crawling it. By enabling the System Setting `index_full_rendered_output`, each Resource's rendered output is added to the index on the event `OnBeforeSaveWebPageCache`. Alternatively, the index will build itself over time whenever a visitor requests a page. If configured as such, the index only builds when a CMS user saves a Resource. There's also a manager menu item that re-indexes all Resources based on System Settings.
 
 **FullTextSearch can only return search results from the set of indexed Resources.**
 
