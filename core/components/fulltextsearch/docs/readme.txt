@@ -72,6 +72,12 @@ wget -r -w 1 -e robots=off http://example.com
 
 When a Resource is deleted, unpublished, or saved, the Plugin will check these properties and behave accordingly.
 
+### FullTextSearch Menu Action
+
+The manager menu has an action under "Clear Cache" that populates the FullTextSearch custom index. It uses the System Settings under the `fulltextsearch` namespace to determine which Resource fields to include.
+
+IMPORTANT: on a site with thousands of Resources, the process of batch indexing can take a long time and cause unwanted server load. In this case, do NOT use the menu action, but instead set up the Plugin with `indexFullRenderedOutput` so each page will be added to index as it's requested and cached, distributing the processing over time.
+
 ### FullTextSearch Snippet
 
 #### Properties
