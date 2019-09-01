@@ -114,7 +114,6 @@ switch ($debug) {
     case 'log':
         $modx->log(modX::LOG_LEVEL_ERROR, $queryString);
         $modx->log(modX::LOG_LEVEL_ERROR, print_r($results, true));
-        return __LINE__;
         break;
     default:
         break;
