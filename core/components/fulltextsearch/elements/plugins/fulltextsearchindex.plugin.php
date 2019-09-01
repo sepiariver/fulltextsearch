@@ -42,11 +42,11 @@ if (!($fts instanceof FullTextSearch)) {
 }
 
 // OPTIONS
-$indexFullRenderedOutput = $modx->getOption('indexFullRenderedOutput', $scriptProperties, $fts->getOption('index_full_rendered_output', null, false));
-$indexResourceFields = array_filter(array_map('trim', explode(',', $modx->getOption('indexResourceFields', $scriptProperties, $fts->getOption('index_resource_fields', null, '')))));
-$appendClassObjects = $modx->getOption('appendClassObjects', $scriptProperties, $fts->getOption('append_class_objects', null, ''));
-$appendRenderedTVIds = array_filter(array_map('trim', explode(',', $modx->getOption('appendRenderedTVIds', $scriptProperties, $fts->getOption('append_rendered_tv_ids', null, '')))));
-$appendAlways = $modx->getOption('appendAlways', $scriptProperties, $fts->getOption('append_always', null, ''));
+$indexFullRenderedOutput = $modx->getOption('indexFullRenderedOutput', $scriptProperties, $fts->getOption('index_full_rendered_output', null, false), true);
+$indexResourceFields = array_filter(array_map('trim', explode(',', $modx->getOption('indexResourceFields', $scriptProperties, $fts->getOption('index_resource_fields', null, ''), true))));
+$appendClassObjects = $modx->getOption('appendClassObjects', $scriptProperties, $fts->getOption('append_class_objects', null, ''), true);
+$appendRenderedTVIds = array_filter(array_map('trim', explode(',', $modx->getOption('appendRenderedTVIds', $scriptProperties, $fts->getOption('append_rendered_tv_ids', null, ''), true))));
+$appendAlways = $modx->getOption('appendAlways', $scriptProperties, $fts->getOption('append_always', null, ''), true);
 
 switch ($modx->event->name) {
 
@@ -61,20 +61,26 @@ switch ($modx->event->name) {
         /* Write Resource output to index before caching it in MODX */
         if ($fts->indexable($modx->resource)) {
             $resId = $modx->resource->get('id');
+            // Create or update
             $ftsContent = $modx->getObject('FTSContent', ['content_id' => $resId]);
             if (!$ftsContent) $ftsContent = $modx->newObject('FTSContent');
+            // Remove script and style tags
+            $content = $fts->removeDomNodes($modx->resource->_output, '//script');
+            $content = $fts->removeDomNodes($content, '//style');
+            // Append additional content
             $contentOutput = $fts->appendContent([
                 'resource' => $resId,
                 'appends' => $appendClassObjects,
                 'appendRenderedTVIds' => $appendRenderedTVIds,
                 'appendContent' => $appendAlways,
-            ], $modx->resource->_output);
+            ], $content);
+            // Populate FTS Content object
             $ftsContent->fromArray([
                 'content_id' => $resId,
                 'content_parent' => $modx->resource->get('parent'),
                 'content_output' => $contentOutput,
             ]);
-            /* Attempt to save the complete Resource output to the index */
+            // Attempt to save the complete Resource output to the index
             if (!$ftsContent->save()) {
                 $modx->log(modX::LOG_LEVEL_ERROR, __FUNCTION__ . ' could not index the output from Resource: ' . $resId . ' on line: ' . __LINE__);
             }
@@ -87,7 +93,7 @@ switch ($modx->event->name) {
             $modx->log(modX::LOG_LEVEL_ERROR, __FUNCTION__ . ' could not load the required Resource, on line: ' . __LINE__);
             break;
         }
-        /* Delete Resource from index */
+        // Delete Resource from index
         $fts->removeIndex($modx->resource->get('id'));
         break;
     case 'OnDocFormSave':
@@ -96,9 +102,8 @@ switch ($modx->event->name) {
             break;
         }
         $resId = $resource->get('id');
-        /* Delete Resource from index if indexable status has changed */
+        // Delete Resource from index if indexable status has changed
         if (!$fts->indexable($resource)) {
-            /* Delete Resource from index */
             $fts->removeIndex($resId);
         } else {
             // Defer to cache save event if indexing full rendered output
@@ -106,11 +111,14 @@ switch ($modx->event->name) {
             // Create or update
             $ftsContent = $modx->getObject('FTSContent', ['content_id' => $resId]);
             if (!$ftsContent) $ftsContent = $modx->newObject('FTSContent');
+            // Content from selected fields
             $content = '';
             foreach ($indexResourceFields as $field) {
                 $content .= ' ' . $resource->get($field);
             }
-            $content = $fts->appendContent([
+            $modx->log(modX::LOG_LEVEL_ERROR, $content);
+            // Append additional content
+            $contentOutput = $fts->appendContent([
                 'resource' => $resId,
                 'appends' => $appendClassObjects,
                 'appendRenderedTVIds' => $appendRenderedTVIds,
@@ -119,7 +127,7 @@ switch ($modx->event->name) {
             $ftsContent->fromArray([
                 'content_id' => $resId,
                 'content_parent' => $resource->get('parent'),
-                'content_output' => $content,
+                'content_output' => $contentOutput,
             ]);
             /* Attempt to save the complete Resource output to the index */
             if (!$ftsContent->save()) {

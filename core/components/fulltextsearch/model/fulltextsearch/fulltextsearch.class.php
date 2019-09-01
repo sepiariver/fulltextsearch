@@ -186,7 +186,8 @@ class FullTextSearch
         return $content . ' ' . preg_replace('/\s+/', ' ', strip_tags($appendContent));
     }
 
-    public function removeIndex($id) {
+    public function removeIndex($id) 
+    {
         $id = (int) $id;
         $ftsContent = $this->modx->getObject('FTSContent', ['content_id' => $id]);
         if ($ftsContent) {
@@ -200,6 +201,19 @@ class FullTextSearch
             $this->modx->log(modX::LOG_LEVEL_WARN, 'No index for Resource: ' . $id . ' was found.');
             return false;
         }
+    }
+
+    public function removeDomNodes($html, $xpathString)
+    {
+        $dom = new DOMDocument;
+        $dom->loadHtml($html);
+
+        $xpath = new DOMXPath($dom);
+        while ($node = $xpath->query($xpathString)->item(0))
+        {
+            $node->parentNode->removeChild($node);
+        }
+        return $dom->saveHTML();
     }
 
     /* UTILITY METHODS (@theboxer) */
