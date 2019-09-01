@@ -56,6 +56,11 @@ class FullTextSearch
         $this->modx->lexicon->load('fulltextsearch:default');
     }
 
+    /**
+     * Check MySQL version. 
+     * 
+     * @todo May not be needed.
+     */
     public function checkDBVersion()
     {
         $vq = $this->modx->query("SHOW VARIABLES LIKE 'version'");
@@ -68,6 +73,11 @@ class FullTextSearch
         return true;
     }
 
+    /**
+     * Run the indexable logic
+     * 
+     * @param modResource $res modResource object to check
+     */
     public function indexable($res)
     {
         $indexable = false;
@@ -115,6 +125,13 @@ class FullTextSearch
         return $indexable;
     }
 
+    /**
+     * Add additional content to a string
+     * 
+     * @param array $options Array of options. 'resource' is required (ID or modResource).
+     * @param string $content Initial content to append to
+     * @param bool $processContent Flag to process content with $chunk->process()
+     */
     public function appendContent($options, $content = '', $processContent = false)
     {
         // Silently fail on these
@@ -186,6 +203,11 @@ class FullTextSearch
         return $content . ' ' . preg_replace('/\s+/', ' ', strip_tags($appendContent));
     }
 
+    /**
+     * Remove FTS Content item from full text index table
+     * 
+     * @param int|string $id ID of Resource to remove from index
+     */
     public function removeIndex($id) 
     {
         $id = (int) $id;
@@ -203,6 +225,14 @@ class FullTextSearch
         }
     }
 
+    /**
+     * Remove dom nodes from html specified by xpath
+     * Credit: https://coderwall.com/p/sniyww/remove-anything-from-html
+     * 
+     * @param string $html HTML from which to create DOMDocument
+     * @param string $xpathString String to query by xpath
+     * @return string Resulting HTML
+     */
     public function removeDomNodes($html, $xpathString)
     {
         $dom = new DOMDocument;
