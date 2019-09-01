@@ -3,7 +3,7 @@
     "lowCaseName": "fulltextsearch",
     "description": "MySQL FULLTEXT search for MODX CMS.",
     "author": "YJ Tso <info@sepiariver.com>",
-    "version": "0.2.0-dev1",
+    "version": "0.2.1-dev1",
     "package": {
         "elements": {
             "plugins": [{

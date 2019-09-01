@@ -236,6 +236,7 @@ class FullTextSearch
     public function removeDomNodes($html, $xpathString)
     {
         $dom = new DOMDocument;
+        libxml_use_internal_errors(true);
         $dom->loadHtml($html);
 
         $xpath = new DOMXPath($dom);
